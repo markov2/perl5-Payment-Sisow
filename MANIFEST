@@ -1,0 +1,10 @@
+ChangeLog
+MANIFEST
+Makefile.PL
+examples/config.ini.templ
+examples/soap-client.pl
+lib/Payment/Sisow.pm
+lib/Payment/Sisow/SOAP.pm
+lib/Payment/Sisow/sisow-soap-v2.0.wsdl
+t/01use.t
+xt/99pod.t
