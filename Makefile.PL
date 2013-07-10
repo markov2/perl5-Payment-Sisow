@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 
 use 5.010;
 
-my $version = '0.10';
+my $version = '0.11';
 
 WriteMakefile
  ( NAME	 	=> 'Payment::Sisow'

@@ -8,7 +8,7 @@ use strict;
 use lib 'lib', '../lib';  # find not yet installed module
 use lib '../AnyHTTP/lib'; # markov devel path
 
-use Log::Report   'sisow';  #, mode => 'DEBUG';
+use Log::Report   'sisow', mode => 'VERBOSE';
 
 use Payment::Sisow::SOAP ();
 use Any::Daemon::HTTP    ();
@@ -42,7 +42,19 @@ my $dconfig = $config->{daemon};
 my $hconfig = $config->{http};
 my $daemon  = Any::Daemon::HTTP->new(%$dconfig, %$hconfig);
 
-print "working in ".$daemon->workdir;
+print "Working in ".$daemon->workdir, "\n";
+print "Connect your browser to http://$hconfig->{host}\n";
+print "Stop with cntrl-C, wait 2 seconds\n";
+
+# When the next two lines are uncommented, all errors and warnings are
+# also sent to syslog. Output still also to the screen.
+#dispatcher SYSLOG => 'syslog', accept => 'INFO-'
+#   , identity => 'payment-soap', facility => 'local0';
+
+# When the next line is uncommented, the errors/warnings will not show
+# on stderr anymore.
+#dispatcher close => 'default';
+
 $daemon->run
   ( max_childs     => 2  # need at least 2, one for notifications!
   , background     => 0  # cntrl-C will work, wait 2 seconds to terminate
@@ -55,12 +67,11 @@ sub handle_request($$$)
     my %qf   = $req->uri->query_form;
     my $test = $qf{testmode} ? 1 : 0;
 
+    #info "PATH=$path";
     update_banks($test) if $qf{update_banks};
     start_trans(\%qf)   if $qf{start_trans};
 
-warn "PATH=$path";
-
-    ### implement Plack ;-)
+    ### now implement Plack ;-)
 
     # Process "delete"
     if($path =~ m!/(delete|status|info)/(\w+)$!)
@@ -222,7 +233,7 @@ sub start_trans($)
 
     my %params   =
      ( amount        => $qf->{amount}
-     , provider      => $prov
+     , payment       => $prov
      , bank_id       => $bankid
      , purchase_id   => $qf->{purchase_id}
      , description   => $qf->{description}

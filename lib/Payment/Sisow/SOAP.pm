@@ -22,11 +22,19 @@ Payment::Sisow::SOAP - payments via the SOAP interface of Sisow
 
 =chapter SYNOPSIS
 
+See M<Payment::Sisow>
+
 =chapter DESCRIPTION
 Sisow (F<http://sisow.nl>) is a Dutch payment broker, which offers a SOAP
-and a REST interface for communication.
+and a REST interface for communication.  This class extends their
+common interface with SOAP specific features.  Oh, the REST interface is
+larger...
 
-http://www.sisow.nl/downloads/WebService.pdf
+The full specification of the SOAP interface can be
+L<downloaded from Sisow|http://www.sisow.nl/downloads/WebService.pdf>.
+However, the REST specification is more clear about the content of
+certain fields.
+
 =chapter METHODS
 
 =section Constructors
@@ -47,6 +55,8 @@ sub init($)
 #--------------
 =section Accessors
 =method wsdl
+Returns the XML and SOAP handler object, used internally.  It is a
+M<XML::Compile::WSDL11> object.
 =cut
 
 sub wsdl()     {shift->{PSS_wsdl}}
@@ -119,15 +129,13 @@ sub _transaction_info(%)
 sub _start_transaction(%)
 {   my ($self, %args) = @_;
 
-#use Data::Dumper;
-#warn "_START ", Dumper \%args;
     my ($answer, $trace) = $self->wsdl->call(GetURL => %args);
     unless($answer)
     {   $trace->printErrors;
         error $trace->{error};
     }
 
-#=for trace
+=for trace
 
 local *TRACE;
 if(open TRACE, '>', "/tmp/sisow.$$")
@@ -136,7 +144,7 @@ if(open TRACE, '>', "/tmp/sisow.$$")
     close TRACE;
 }
 
-#=cut
+=cut
 
     # $answer = {parameters => {GetURLResult => 0, issuerurl =>, trxid => }};
     my $p  = $answer->{parameters};

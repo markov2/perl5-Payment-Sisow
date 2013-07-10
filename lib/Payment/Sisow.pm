@@ -34,12 +34,8 @@ Payment::Sisow - payments via Sisow
 =chapter DESCRIPTION
 Sisow (F<http://sisow.nl>) is a Dutch payment broker, which offers a
 SOAP and a REST interface for communication.  This implementation tries
-to offer an API which will work for both protocols, although currently
-only the SOAP version is realized.
-
-Originally, Sisow focussed on the Dutch cheap and easy iDEAL payment
-system --offered by most Dutch banks-- but later it added other types
-of payments.
+to offer a common API which will work for both protocols, although currently
+only the SOAP version is realized.  The REST interface offers more.
 
 You can test this module using the script in the F<examples/> directory
 contained in the CPAN distribution of C<Payment-Sisow>.  It is an
@@ -163,8 +159,8 @@ redirected to.
 =option  description  STRING
 =default description  undef
 
-=option  provider     PROVIDER
-=default provider     'ideal'
+=option  payment     PROVIDER
+=default payment     'ideal'
 
 =requires return_url   URL
 
@@ -230,9 +226,9 @@ warn Dumper \%args;
     $entrance    = ''
         if $entrance eq $purchase_id;
 
-    my $provider = $args{provider} || 'ideal';
-    error __x"provider iDEAL requires bank id"
-        if $provider eq 'ideal' && !$bank_id;
+    my $payment = $args{payment} || 'ideal';
+    error __x"payment via iDEAL requires bank id"
+        if $payment eq 'ideal' && !$bank_id;
 
     my $return   = $args{return_url} or panic;
     my $cancel   = $args{cancel_url};
@@ -244,7 +240,7 @@ warn Dumper \%args;
     my $p        = $self->_start_transaction
       ( merchantid  => $self->merchantId
       , merchantkey => $self->merchantKey
-      , payment     => ($provider eq 'ideal' ? '' : $provider)
+      , payment     => ($payment eq 'ideal' ? '' : $payment)
       , issuerid    => $bank_id
       , amount      => $amount_cent
       , purchaseid  => $purchase_id
@@ -263,6 +259,9 @@ warn Dumper \%args;
 
     ($tid, $bank_page);
 }
+
+#----------------
+=section Helpers
 
 =method securedPayment QS
 Check whether the payment response was created by Sisow.  QS is a HASH with
@@ -291,5 +290,35 @@ sub securedPayment($)
 
 sub isValidPurchaseId($)  { $_[1] =~ /^[$valid_purchase_chars]{1,16}$/o }
 sub isValidDescription($) { $_[1] =~ /^[$valid_descr_chars]{0,32}$/o    }
+
+
+#--------------
+=chapter DETAILS
+
+=section About Sisow
+
+Originally, Sisow focussed on the Dutch cheap and easy iDEAL payment
+system --offered by most Dutch banks-- but later it added other types
+of payments:
+
+=over 4
+=item * ideal; iDEAL for about 12 Dutch banks (NL)
+=item * sofort; SofortBanking/DIRECTebanking (DE)
+=item * mistercash; Bancontact/MisterCash (BE)
+=item * paypalec; PayPal Express Checkout
+=item * webshop; Webshop Gift Card (NL)
+=item * fijncadeau; Fijn Cadeaukaart (NL)
+=item * podium; Podium Cadeaukaart (NL)
+=back
+
+Sisow also offers payment services:
+
+=over 4
+=item * ecare; pay after delivery
+=item * ebill; digital accept giro
+=item * overboeking; pay received accept giro
+=back
+
+=cut
 
 1;
