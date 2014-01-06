@@ -50,21 +50,26 @@ and (if available) a donation.
 
 =c_method new OPTIONS
 Inside Sisow's customer website, you can find the generated merchant
-<b>id</b> (semi-secret registration number) and <b>key (secret which
+B<id> (semi-secret registration number) and B<key> (secret which
 is used to sign the replies).
 
 =requires merchant_id STRING
+The Sisow customer's unique key.
 
 =requires merchant_key STRING
+The "merchants" password.
 
 =option  test BOOLEAN
 =default test <false>
 You have to enable the permission to run tests in the customer website
-of Sisow to be able to run tests.  If not enabled, you will get "317"
-errors.
+of Sisow.  If not enabled, you will get "317" errors.
 =cut
 
-sub new(%) { my $class = shift; (bless {}, $class)->init( {@_} ) }
+sub new(%)
+{   my $class = shift;
+    $class ne __PACKAGE__ or panic "instantiate an extension of ".__PACKAGE__;
+    (bless {}, $class)->init( {@_} );
+}
 
 sub init($)
 {   my ($self, $args) = @_;
@@ -107,7 +112,8 @@ sub listIdealBanks(%)
 }
 
 =method transactionStatus TRANSACTION_ID
-Returns C<undef>, "Success", "Expired", "Cancelled", or "Failure".
+Returns C<undef>, "Open", "Success", "Expired", "Cancelled", "Failure",
+"Pending", "Credited", or "Reversed".
 
 =example
   my $status = $sisow->transactionStatus($trxid) || 'MISSING';
@@ -154,7 +160,10 @@ redirected to.
 
 =requires purchase_id STRING
 =requires amount      FLOAT_EURO
-=requires bank_id     ISSUERID
+
+=option  bank_id     ISSUERID
+=default bank_id     <undef>
+Required when C<payment> is C<ideal>
 
 =option  description  STRING
 =default description  undef
@@ -182,12 +191,15 @@ Pick from:
   podium        Podium Cadeaukaart (The Netherlands)
   ebill         indirect payments
 
+=example
+
+  my ($trxid, $redirect) = try { $sisow->startTransation(%args) };
+  die $@->wasFatal if $@;
+
 =cut
 
 sub startTransaction(%)
 {   my ($self, %args) = @_;
-use Data::Dumper;
-warn Dumper \%args;
     my $bank_id     = $args{bank_id};
     my $amount_euro = $args{amount}  // panic;
     my $amount_cent = int($amount_euro*100 + 0.5); # float euro -> int cents
@@ -263,16 +275,17 @@ warn Dumper \%args;
 #----------------
 =section Helpers
 
-=method securedPayment QS
+=method securedPayment QS|PAIRS
 Check whether the payment response was created by Sisow.  QS is a HASH with
-the URI parameters.
+the URI parameters, or the same parameters as LIST of PAIRS
 =cut
 
-sub securedPayment($)
-{   my ($self, $qs) = @_;
-    my $ec       = $qs->{ec};
-    my $trxid    = $qs->{trxid};
-    my $status   = $qs->{status};
+sub securedPayment(@)
+{   my $self   = shift;
+    my $qs     = @_ > 1 ? {@_} : shift;
+    my $ec     = $qs->{ec};
+    my $trxid  = $qs->{trxid};
+    my $status = $qs->{status};
     # docs say separated by '/', but isn't in practice
     my $checksum = sha1_hex
         (join '', $trxid, $ec, $status, $self->merchantId, $self->merchantKey);
