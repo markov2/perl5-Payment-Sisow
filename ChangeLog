@@ -1,5 +1,8 @@
 ============= version history for Payment::Sisow
 
+version 0.13: Wed Jan  8 00:53:19 CET 2014
+	- add dependency to ::SOAP12 [cpantesters]
+
 version 0.12: Mon Jan  6 09:41:43 CET 2014
 	- error when ::Sisow gets instantiated.
 	- documentation fixes

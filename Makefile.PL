@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 
 use 5.010;
 
-my $version = '0.12';
+my $version = '0.13';
 
 WriteMakefile
  ( NAME	 	=> 'Payment::Sisow'
@@ -12,6 +12,7 @@ WriteMakefile
     { Test::More           => 0.80
     , Log::Report          => '1.00'
     , XML::Compile::SOAP11 => '3.00'
+    , XML::Compile::SOAP12 => '3.00'
     , XML::Compile::WSDL11 => '3.00'
     , File::Basename       => 0
     , File::Spec           => 0
