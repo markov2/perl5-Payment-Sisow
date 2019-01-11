@@ -1,6 +1,7 @@
 ChangeLog
 MANIFEST
 Makefile.PL
+README.md
 examples/config.ini.templ
 examples/soap-client.pl
 lib/Payment/Sisow.pm

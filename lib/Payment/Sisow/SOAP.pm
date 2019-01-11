@@ -1,9 +1,13 @@
-use warnings;
-use strict;
-use utf8;
+# This code is part of distribution Payment::Sisow.  Meta-POD processed with
+# OODoc into POD and HTML manual-pages.  See README.md
+# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
 
 package Payment::Sisow::SOAP;
 use base 'Payment::Sisow';
+
+use warnings;
+use strict;
+use utf8;
 
 use Log::Report 'sisow';
 
@@ -46,7 +50,14 @@ sub init($)
 {   my ($self, $args) = @_;
     $self->SUPER::init($args);
 
-    my $wsdl = $self->{PSS_wsdl} = XML::Compile::WSDL11->new($wsdl_fn);
+    my $wsdl = $self->{PSS_wsdl} = XML::Compile::WSDL11->new
+      ( $wsdl_fn
+
+        # JSON does not like Math::BigInt/Float structures, and we
+        # do not need them either.  JSON is useful to store the state
+        # of the order.
+      , opts_readers => +{sloppy_floats => 1, sloppy_integers => 1}
+      );
     $wsdl->compileCalls(port => 'sisowSoap');
 
     $self;

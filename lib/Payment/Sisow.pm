@@ -1,8 +1,12 @@
+# This code is part of distribution Payment::Sisow.  Meta-POD processed with
+# OODoc into POD and HTML manual-pages.  See README.md
+# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
+
+package Payment::Sisow;
+
 use warnings;
 use strict;
 use utf8;
-
-package Payment::Sisow;
 
 use Log::Report 'sisow';
 
@@ -161,26 +165,38 @@ redirected to.
 =requires purchase_id STRING
 =requires amount      FLOAT_EURO
 
+=option  entrance_code STRING
+=default entrance_code <undef>
+
 =option  bank_id     ISSUERID
 =default bank_id     <undef>
 Required when C<payment> is C<ideal>
 
 =option  description  STRING
-=default description  undef
+=default description  <undef>
 
 =option  payment     PROVIDER
 =default payment     'ideal'
 
 =requires return_url   URL
+Sets the default for all communications from the sisow server to your
+application.  It is the user's browser which passes the information on, so
+you must return a page to the user as answer.  The parameters returned are
+'trxid', 'ec', 'status', and 'sha1'.
 
 =option   cancel_url   URL
 =default  cancel_url   <return_url>
+Point of return when the transaction is not succesful, for instance
+cancelled by the user.
 
 =option   callback_url URL
 =default  callback_url <return_url>
+Called by sisow when the user has "disappeared", the transaction gets
+cancelled.
 
 =option   notify_url   URL
 =default  notify_url   <return_url>
+Point for any status change in the transaction.
 
 Pick from:
 
@@ -286,6 +302,7 @@ sub securedPayment(@)
     my $ec     = $qs->{ec};
     my $trxid  = $qs->{trxid};
     my $status = $qs->{status};
+
     # docs say separated by '/', but isn't in practice
     my $checksum = sha1_hex
         (join '', $trxid, $ec, $status, $self->merchantId, $self->merchantKey);
